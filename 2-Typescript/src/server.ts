@@ -9,6 +9,7 @@ app.get('/', (req: any, res: any) => {
   res.write('Hello world')
   res.end()
 })
+
 app.get('/metrics.json', (req: any, res: any) => {
     MetricsHandler.get((err: Error | null, result?: any) => {
       if (err) {
