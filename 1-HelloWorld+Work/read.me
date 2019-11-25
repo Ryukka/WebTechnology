@@ -1,0 +1,51 @@
+First Test
+
+This is the first test of nodejs in which we are testing 2 modules: http and url to get  the path of a webserver and print different things depending of the parameters
+
+this is what is called in one file:
+
+// Import a module
+const http = require('http')
+// Import Node url module
+const url = require('url')
+const qs = require('querystring')
+
+
+const content = '<!DOCTYPE html>' +
+'<html>' +
+'    <head>' +
+'        <meta charset="utf-8" />' +
+'        <title>ECE AST</title>' +
+'    </head>' + 
+'    <body>' +
+'         <p>Hello World !</p>' +
+'    </body>' +
+'</html>'
+
+
+const serverHandle = function (req, res) {
+  const route = url.parse(req.url)
+  const path = route.pathname 
+  const params = qs.parse(route.query)
+  console.log(path);
+  console.log(params);
+
+
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  if (path === '/hello' && 'name' in params) {
+    if ((params['name'])=== 'yven'){
+      res.write('I, my name is Yven i\'m 21.')
+    }
+    else{
+      res.write('hello ' + params['name'])
+    }
+  } else {
+    res.write('error 404 message not found')
+  }
+  res.end();
+}
+const server = http.createServer(serverHandle);
+server.listen(8080)
+
+
+Yven Shue
