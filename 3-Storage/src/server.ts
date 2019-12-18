@@ -23,6 +23,7 @@ app.get('/hello/:name', (req: any, res: any) => {
 })
 
 const dbMet: MetricsHandler = new MetricsHandler('./db/metrics')
+
 app.get('/metrics/:id', (req: any, res: any) => {
   dbMet.get(req.params.id, (err: Error | null, result?: any) => {
     if (err) throw err
