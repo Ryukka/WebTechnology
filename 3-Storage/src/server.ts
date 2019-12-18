@@ -1,5 +1,5 @@
 import express = require('express')
-import { MetricsHandler } from './metrics'
+import { MetricsHandler, Metric } from './metrics'
 import path = require('path')
 import bodyparser = require('body-parser')
 
@@ -23,22 +23,29 @@ app.get('/hello/:name', (req: any, res: any) => {
 })
 
 const dbMet: MetricsHandler = new MetricsHandler('./db/metrics')
-
 app.get('/metrics/:id', (req: any, res: any) => {
+  dbMet.get(req.params.id, (err: Error | null, result?: any) => {
+    if (err) throw err
+    res.json(result)
+  })
+})
+
+app.post('/metrics/:id', (req: any, res: any) => {
+  
   dbMet.save(req.params.id, req.body, (err: Error | null) => {
     if (err) throw err
+    
     res.status(200).send()
   })
 })
 
-
-app.post('/metrics/get/:id', (req: any, res: any) => {
-  dbMet.get(req.params.id, req.body, (err: Error | null) => {
+app.delete('metrics/:id', (req:any,res:any)=>{
+  dbMet.delete(req.params.id, (err: Error | null,result?: any)=> {
     if (err) throw err
+    
     res.status(200).send()
   })
 })
-
 
 app.listen(port, (err: Error) => {
   if (err) {

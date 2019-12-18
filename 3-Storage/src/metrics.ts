@@ -14,39 +14,62 @@ export class Metric {
 
 export class MetricsHandler {
   private db: any 
-
+  
   constructor(dbPath: string) {
     this.db = LevelDB.open(dbPath)
   }
-
-  public save(key: number, metrics: Metric[], callback: (error: Error | null) => void) {
-    const stream = WriteStream(this.db);
-    stream.on('error', function (err) {
-      console.log('Oh my!', err)
-    })
-    stream.on('close', function () {
-      console.log('Stream closed')
-    })
+  
+  public closeDB(){
+    this.db.close()
+  }
+  public save(key: string, metrics: Metric[], callback: (error: Error | null) => void) {
+    const stream = WriteStream(this.db)
+    stream.on('error', callback)
+    stream.on('close', callback)
     metrics.forEach((m: Metric) => {
-      stream.write({ key: `metric:${key}${m.timestamp}`, value: m.value })
+      stream.write({ key: `metric:${key}:${m.timestamp}`, value: m.value })
     })
     stream.end()
-
   }
-
-  public get(key:number,metrics:[],callback:(error :Error |null)=> void) {    
-  const stream = this.db.createReadStream()
-  .on('data', function (data) {
-    console.log(data.key, '=', data.value)
-  })
-  .on('error', function (err) {
-    console.log('Oh my!', err)
-  })
-  .on('close', function () {
-    console.log('Stream closed')
-  })
-  .on('end', function () {
-    console.log('Stream ended')
-  })
+  
+  public get(key: string, callback: (err: Error | null, result?: Metric[]) => void) {
+    const stream = this.db.createReadStream()
+    var met: Metric[] = []
+    
+    stream
+      .on('error', callback)
+      .on('data', (data: any) => {
+        const [_, k, timestamp] = data.key.split(":")
+        const value = data.value
+        met.push(data)
+        if (key != k) {
+          console.log(`LevelDB error: ${data} does not match key ${key}`)
+        } else {
+          met.push(new Metric(timestamp, value))
+          console.log(met)
+        }
+      })
+      .on('end', (err: Error) => {
+        callback(null, met)
+      })
   }
+  public delete(key: number, callback: (err: Error | null) => void) {
+
+    const stream = this.db.createReadStream()
+    stream.on('error', callback)
+    .on('data', (data: any) => {
+      
+  //for each data, we will fire this function
+      const [_, k, timestamp] = data.key.split(":")
+      const value = data.value
+      if (key != k) {
+        callback(null)
+      } else {
+        this.db.del(data.key) 
+      }
+    })
+    .on('end', (err: Error) => {
+      callback(null )
+    })}
+
 }
