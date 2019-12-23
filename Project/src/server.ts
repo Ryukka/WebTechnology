@@ -48,7 +48,7 @@ authRouter.get('/logout', (req: any, res: any) => {
 })
 
 app.post('/login', (req: any, res: any, next: any) => {
-  dbUser.get(req.body.username, req.body.password, req.body.email, (err: Error | null, result?: User) => {
+  dbUser.get(req.body.username, req.body.password, req.body.email, function (err: Error | null, result?: User) {
     if (err) next(err)
     if (result === undefined || !result.validatePassword(req.body.password)) {
       res.redirect('/login')

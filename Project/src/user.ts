@@ -34,12 +34,12 @@ export class User {
 export class UserHandler {
       public db: any
     
-      public get(username: string, password: string, email: string, callback: (err: Error | null, result?: User) => User) {
+      public get(username: string, password: string, email: string, callback: (err: Error | null, result?: User) => void) {
         this.db.get(`user:${username}`,`user:${password}`,`user:${email}`, function (err: Error, result?:User) {
           
           if (err) callback(err)
           else if ((username === undefined)||(password === undefined)||(email === undefined)) callback(null,undefined)
-          else callback(null, User.fromDb(username, password,email))
+          else callback(null, User.fromDb(username, password, email))
         })
       }
     
