@@ -38,7 +38,7 @@ export class UserHandler {
         this.db.get(`user:${username}`,`user:${password}`,`user:${email}`, function (err: Error, result?:User) {
           
           if (err) callback(err)
-          else if ((username === undefined)||(password === undefined)||(email === undefined)) callback(null)
+          else if ((username === undefined)||(password === undefined)||(email === undefined)) callback(null,undefined)
           else callback(null, User.fromDb(username, password,email))
         })
       }
