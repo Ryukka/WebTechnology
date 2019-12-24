@@ -1,0 +1,16 @@
+{
+  "name": "testexpress",
+  "version": "1.0.0",
+  "description": "",
+  "main": "express.js",
+  "scripts": {
+    "dev": "./node_modules/.bin/nodemon"
+  },
+  "author": "Student",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ejs": "^2.7.2",
+    "express": "^4.17.1",
+    "nodemon": "^1.19.4"
+  }
+}
