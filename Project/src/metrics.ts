@@ -2,12 +2,10 @@ import { LevelDB } from "./leveldb"
 import WriteStream from 'level-ws'
 
 export class Metric {
-  public key: string
-  public timestamp: number
+  public timestamp: string
   public value: number
 
-  constructor(k: string, ts: number, v: number) {
-    this.key= k
+  constructor(ts: string, v: number) {
     this.timestamp = ts
     this.value = v
   }
@@ -24,11 +22,13 @@ export class MetricsHandler {
     this.db.close()
   }
   
-  public save(m: Metric, callback: (error: Error | null) => void) {
+  public save(key: string, metrics: Metric[], callback: (error: Error | null) => void) {
     const stream = WriteStream(this.db)
     stream.on('error', callback)
-    stream.on('close', callback)  
-    stream.write({username: m.key, metric:m.timestamp, value:m.value} )
+    stream.on('close', callback)
+    metrics.forEach((m: Metric) => {
+      stream.write({ key: `metric:${key}:${m.timestamp}`, value: m.value })
+    })
     stream.end()
   }
   
@@ -38,23 +38,32 @@ export class MetricsHandler {
     
     stream.on('error', callback)
       .on('data', (data: any) => {
-        const user = data.username
-      const timestamp = data.timestamp
-      const value = data.value
-          met.push(new Metric(user,timestamp, value))
+        const [_, k, timestamp] = data.key.split(":")
+        const value = data.value
+        if (key != k) {
+          console.log(`LevelDB error: ${data} does not match key ${key}`)
+        } else {
+          met.push(new Metric(timestamp, value))
+        }
       })
       .on('end', (err: Error) => {
         callback(null, met)
       })
   }
-  public delete(key: string,timestamp:string, callback: (err: Error | null, result?: Metric[]) => void){
-    const stream = this.db.createReadStream()
-      stream.on('error', callback)
-    .on('data', (data: any) => {
-      const user = data.username
-      const timestamp = data.timestamp
-      this.db.del(data.username,data.timestamp,data.value)
-    }
-    )
-  }
+
+public delete(key: number, callback: (err: Error | null) => void) {
+
+  const stream = this.db.createReadStream()
+  stream.on('error', callback)
+  .on('data', (data: any) => {
+    
+//for each data, we will fire this function
+    const [_, k, timestamp] = data.key.split(":")
+    const value = data.value
+    this.db.del(data.key)
+  })
+  .on('end', (err: Error) => {
+    callback(null )
+  })
+}
 }

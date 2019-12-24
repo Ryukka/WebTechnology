@@ -21,6 +21,9 @@ app.listen(port, (err: Error) => {
   console.log(`Server is running on http://localhost:${port}`)
 })
 
+
+
+
 const LevelStore = levelSession(session)  // login part
 
 app.use(session({
@@ -47,8 +50,10 @@ authRouter.get('/logout', (req: any, res: any) => {
   res.redirect('/login')
 })
 
+
+
 app.post('/login', (req: any, res: any, next: any) => {
-  dbUser.get(req.body.username, req.body.password, req.body.email, function (err: Error | null, result?: User) {
+  dbUser.get(req.body.username, (err: Error | null, result?: User) => {
     if (err) next(err)
     if (result === undefined || !result.validatePassword(req.body.password)) {
       res.redirect('/login')
@@ -60,57 +65,58 @@ app.post('/login', (req: any, res: any, next: any) => {
   })
 })
 
+//Metrics part
+
+const dbMet: MetricsHandler = new MetricsHandler('./db/metrics')
+
+
+
+app.post('/add'),(req: any, res: any) =>{
+ var metrics: Metric[] = []
+ var metric: Metric= new Metric(req.body.timestamp,req.nody.value)
+ metrics.push(metric)
+ dbMet.save(req.session.user.username, metrics, (err: Error | null) => {
+  if (err) throw err
+  res.status(200).send()
+ })
+}
+
+//end of metrics part
+
 app.use(authRouter)
 
 
 const userRouter = express.Router()    // signup part
 
 app.post('/signup', (req: any, res: any, next: any) => {        //create an user
-    dbUser.get(req.body.username, req.body.password,req.body.email, function (err: Error | null, result?: User) {
-      //if (err) {
-       //res.status(409).send("user already exists")
-      //} else {
-        var user: User = new User(req.body.username, req.body.password, req.body.email)
-        dbUser.save(user, function (err: Error | null) {
-        if (err) next(err)
+  dbUser.get(req.body.username, function (err: Error | null, result?: User) {
+    //if (err) {
+     //res.status(409).send("user already exists")
+    //} else {
+      var user: User = new User(req.body.username, req.body.password, req.body.email)
+      dbUser.save(user, function (err: Error | null) {
+      if (err) next(err)
 
-        else {
-          //alert('user created')
-          res.redirect('/login')
-        }
-        })
+      else {
+        //alert('user created')
+        res.redirect('/login')
+      }
       })
     })
+  })
 
 
-userRouter.get('/:username', (req: any, res: any, next: any) => {
-    dbUser.get(req.params.username,req.params.password,req.params.email, function (err: Error | null, result?: User) {
+  userRouter.get('/:username', (req: any, res: any, next: any) => {
+    dbUser.get(req.params.username, function (err: Error | null, result?: User) {
       if (err || result === undefined) {
         res.status(404).send("user not found")
-      } else res.redirect('/metrics/add')
+      } else res.status(200).json(result)
     })
 })
 
 app.use('/user', userRouter)
 
 
-const dbMet: MetricsHandler = new MetricsHandler('./db/metrics') // metrics part
-const metricsRouter = express.Router()
-
-metricsRouter.get('/add', (req: any, res: any) => { 
-  res.render('addMetrics')
-})
-
-metricsRouter.post('/add'),(req: any, res: any) =>{
-  var metric: Metric = new Metric(req.session.user.username,req.body.timestamp,req.body.value)
-  dbMet.save(metric, function(err:Error|null){
-          alert('metric added')
-          res.redirect('/add')
-        
-  })
-}
-
-metricsRouter.use('/user/metrics',metricsRouter)
 
 const authCheck = function (req: any, res: any, next: any) {
   if (req.session.loggedIn) {

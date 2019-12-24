@@ -7,15 +7,21 @@ export class User {
   public email: string
   public password: string = ""
   
-  constructor(username: string, email: string, password: string) {
+  constructor(username: string, email: string, password: string, passwordHashed: boolean = false) {
     this.username = username
     this.email = email
     this.password = password
   }
-  static fromDb(username: string, password: string, email: string): User {
+  static fromDb(username: string, value: any): User {
+      var [password, email] = value.split(':')
       return new User(username, email, password)
   }
-
+    
+  public setPassword(toSet: string): void {
+    // Hash and set password
+    this.password= toSet;
+  }
+    
   public getPassword(): string {
     return this.password;
   }
@@ -34,26 +40,22 @@ export class User {
 export class UserHandler {
       public db: any
     
-      public get(username: string, password: string, email: string, callback: (err: Error | null, result?: User) => void) {
-        this.db.get(`user:${username}`,`user:${password}`,`user:${email}`, function (err: Error, result?:User) {
-          
+      public get(username: string, callback: (err: Error | null, result?: User) => void) {
+        this.db.get(`user:${username}`, function (err: Error, data: any) {
           if (err) callback(err)
-          else if ((username === undefined)||(password === undefined)||(email === undefined)) callback(null,undefined)
-          else callback(null, User.fromDb(username, password, email))
+          else if (data === undefined) callback(null, data)
+          else callback(null, User.fromDb(username, data))
         })
       }
     
       public save(user: User, callback: (err: Error | null) => void) {
-        this.db.put(`user:${user.username}`, `password:${user.password}`,`email:${user.email}`, (err: Error | null) => {
+        this.db.put(`user:${user.username}`, `${user.email}:${user.getPassword()}`, (err: Error | null) => {
           callback(err)
         })
       }
     
-      public delete(username: string, callback: (err: Error | null) => void) { // to delete account
-        this.db.delete(`user:${username}`, (err: Error | null) => {
-          if (err) callback(err)
-          else alert ('User deleted')
-        }  )
+      public delete(username: string, callback: (err: Error | null) => void) {
+        // TODO
       }
     
       constructor(path: string) {

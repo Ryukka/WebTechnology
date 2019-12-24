@@ -9,18 +9,9 @@
       <button class="btn btn-danger" href="/logout" onClick='document.location.href="/logout"'>
         Logout
       </button>
-      <div id="metrics"></div>
+      <button class="btn btn-danger" href="/add" onClick='document.location.href="/add"'>
+        Metrics
+      </button>
     </div>
-    <script>
-      $('#show-metrics').click((e) => {
-        e.preventDefault();
-        $.getJSON("/metrics/<%= name %>", {}, (data) => {
-          const content = data.map(d => {
-            return 'timestamp: '+d.timestamp+', value: '+d.value+'';
-          })
-          $('#metrics').append(content.join("\n"));
-        });
-      })
-    </script>
   </body>
 </html>
